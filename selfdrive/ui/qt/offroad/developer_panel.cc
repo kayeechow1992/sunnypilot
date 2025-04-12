@@ -25,7 +25,7 @@ DeveloperPanel::DeveloperPanel(SettingsWindow *parent) : ListWidget(parent) {
   });
   addItem(longManeuverToggle);
 
-  experimentalLongitudinalToggle = new ParamControl(
+  alphaLongitudinalToggle = new ParamControl(
     "ExperimentalLongitudinalEnabled",
     tr("openpilot Longitudinal Control (Alpha)"),
     QString("<b>%1</b><br><br>%2")
@@ -34,11 +34,11 @@ DeveloperPanel::DeveloperPanel(SettingsWindow *parent) : ListWidget(parent) {
               "Enable this to switch to openpilot longitudinal control. Enabling Experimental mode is recommended when enabling openpilot longitudinal control alpha.")),
     ""
   );
-  experimentalLongitudinalToggle->setConfirmation(true, false);
-  QObject::connect(experimentalLongitudinalToggle, &ParamControl::toggleFlipped, [=]() {
+  alphaLongitudinalToggle->setConfirmation(true, false);
+  QObject::connect(alphaLongitudinalToggle, &ParamControl::toggleFlipped, [=]() {
     updateToggles(offroad);
   });
-  addItem(experimentalLongitudinalToggle);
+  addItem(alphaLongitudinalToggle);
 
   // Joystick and longitudinal maneuvers should be hidden on release branches
   is_release = params.getBool("IsReleaseBranch");
@@ -52,40 +52,40 @@ void DeveloperPanel::updateToggles(bool _offroad) {
     btn->setVisible(!is_release);
 
     /*
-     * experimentalLongitudinalToggle should be toggelable when:
+     * alphaLongitudinalToggle should be toggelable when:
      * - visible, and
      * - during onroad & offroad states
      */
-    if (btn != experimentalLongitudinalToggle) {
+    if (btn != alphaLongitudinalToggle) {
       btn->setEnabled(_offroad);
     }
   }
 
-  // longManeuverToggle and experimentalLongitudinalToggle should not be toggleable if the car does not have longitudinal control
+  // longManeuverToggle and alphaLongitudinalToggle should not be toggleable if the car does not have longitudinal control
   auto cp_bytes = params.get("CarParamsPersistent");
   if (!cp_bytes.empty()) {
     AlignedBuffer aligned_buf;
     capnp::FlatArrayMessageReader cmsg(aligned_buf.align(cp_bytes.data(), cp_bytes.size()));
     cereal::CarParams::Reader CP = cmsg.getRoot<cereal::CarParams>();
 
-    if (!CP.getExperimentalLongitudinalAvailable() || is_release) {
+    if (!CP.getAlphaLongitudinalAvailable() || is_release) {
       params.remove("ExperimentalLongitudinalEnabled");
-      experimentalLongitudinalToggle->setEnabled(false);
+      alphaLongitudinalToggle->setEnabled(false);
     }
 
     /*
-     * experimentalLongitudinalToggle should be visible when:
+     * alphaLongitudinalToggle should be visible when:
      * - is not a release branch, and
-     * - the car supports experimental longitudinal control (alpha)
+     * - the car supports alpha longitudinal control (alpha)
      */
-    experimentalLongitudinalToggle->setVisible(CP.getExperimentalLongitudinalAvailable() && !is_release);
+    alphaLongitudinalToggle->setVisible(CP.getAlphaLongitudinalAvailable() && !is_release);
 
     longManeuverToggle->setEnabled(hasLongitudinalControl(CP) && _offroad);
   } else {
     longManeuverToggle->setEnabled(false);
-    experimentalLongitudinalToggle->setVisible(false);
+    alphaLongitudinalToggle->setVisible(false);
   }
-  experimentalLongitudinalToggle->refresh();
+  alphaLongitudinalToggle->refresh();
 
   offroad = _offroad;
 }

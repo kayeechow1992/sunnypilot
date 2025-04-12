@@ -13,7 +13,7 @@ private:
   ParamControl* adbToggle;
   ParamControl* joystickToggle;
   ParamControl* longManeuverToggle;
-  ParamControl* experimentalLongitudinalToggle;
+  ParamControl* alphaLongitudinalToggle;
   bool is_release;
   bool offroad = false;
 
