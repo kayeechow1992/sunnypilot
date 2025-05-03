@@ -11,7 +11,7 @@ from openpilot.common.params import Params
 from cereal import custom
 import json
 
-CURRENT_SELECTOR_VERSION = 2
+CURRENT_SELECTOR_VERSION = 3
 REQUIRED_MIN_SELECTOR_VERSION = 2
 
 
