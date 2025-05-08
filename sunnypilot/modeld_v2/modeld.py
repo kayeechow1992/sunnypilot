@@ -24,7 +24,7 @@ from openpilot.sunnypilot.modeld_v2.models.commonmodel_pyx import DrivingModelFr
 from openpilot.sunnypilot.modeld_v2.meta_helper import load_meta_constants
 from openpilot.sunnypilot.models.runners.helpers import get_model_runner
 
-from openpilot.sunnypilot.models.SplitModelConstants import ModelConstants as SplitModelConstants 
+from openpilot.sunnypilot.models.SplitModelConstants import ModelConstants as SplitModelConstants
 
 PROCESS_NAME = "selfdrive.modeld.modeld"
 
@@ -118,22 +118,26 @@ class ModelState:
 
     # For split models, we need to run in two stages
     if self.model_runner.is_20hz_3d:
+      # Store original inputs to prepare for stage 1
+      stage1_inputs = {k: v.copy() if isinstance(v, np.ndarray) else v
+                      for k, v in self.numpy_inputs.items()}
+
       # Stage 1: Prepare inputs for the first model
-      self.model_runner.prepare_inputs(imgs_cl, self.numpy_inputs, self.frames, stage=1)
+      self.model_runner.prepare_inputs(imgs_cl, stage1_inputs, self.frames)
 
       # Run first stage inference
-      stage1_outputs = self.model_runner.run_model(stage=1)
+      stage1_outputs = self.model_runner.run_model()
 
       # Update inputs for second stage with outputs from first stage
       self.full_features_buffer[0, :-1] = self.full_features_buffer[0, 1:]
       self.full_features_buffer[0, -1] = stage1_outputs['hidden_state'][0, self.temporal_idxs]
       self.numpy_inputs['features_buffer'][0, :] = self.full_features_buffer[0, self.temporal_idxs]
 
-      # Stage 2: Prepare inputs for the second model (including using stage1 outputs)
-      self.model_runner.prepare_inputs(imgs_cl, self.numpy_inputs, self.frames, stage=2)
+      # Stage 2: Prepare inputs for the second model with updated features
+      self.model_runner.prepare_inputs(imgs_cl, self.numpy_inputs, self.frames)
 
       # Run second stage inference
-      outputs = self.model_runner.run_model(stage=2)
+      outputs = self.model_runner.run_model()
     else:
       # Regular (non-split) model execution
       self.model_runner.prepare_inputs(imgs_cl, self.numpy_inputs, self.frames)
