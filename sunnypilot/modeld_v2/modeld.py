@@ -24,7 +24,7 @@ from openpilot.sunnypilot.modeld_v2.models.commonmodel_pyx import DrivingModelFr
 from openpilot.sunnypilot.modeld_v2.meta_helper import load_meta_constants
 from openpilot.sunnypilot.models.runners.helpers import get_model_runner
 
-from openpilot.sunnypilot.models.SplitModelConstants import ModelConstants as SplitModelConstants 
+from openpilot.sunnypilot.models.SplitModelConstants import ModelConstants as SplitModelConstants
 
 PROCESS_NAME = "selfdrive.modeld.modeld"
 
@@ -53,7 +53,7 @@ class ModelState:
     buffer_length = 5 if self.model_runner.is_20hz else 2
     self.frames = {'input_imgs': DrivingModelFrame(context, buffer_length), 'big_input_imgs': DrivingModelFrame(context, buffer_length)}
     self.prev_desire = np.zeros(ModelConstants.DESIRE_LEN, dtype=np.float32)
-    
+
     match (self.model_runner.is_20hz, self.model_runner.is_20hz_3d):
       case (True, False):
         self.full_features_buffer = np.zeros((ModelConstants.FULL_HISTORY_BUFFER_LEN + 1 , ModelConstants.FEATURE_LEN), dtype=np.float32)
@@ -76,7 +76,7 @@ class ModelState:
         num_elements = self.numpy_inputs['features_buffer'].shape[1]
         step_size = int(-100 / num_elements)
         self.temporal_idxs = np.arange(step_size, step_size * (num_elements + 1), step_size)[::-1]
-    
+
     if self.model_runner.is_20hz:
       self.desire_reshape_dims = (self.numpy_inputs['desire'].shape[0], self.numpy_inputs['desire'].shape[1], -1, self.numpy_inputs['desire'].shape[2])
 
@@ -124,8 +124,15 @@ class ModelState:
         self.numpy_inputs['features_buffer'][:] = self.full_features_buffer[self.temporal_idxs]
       case (True, True):
         self.full_features_buffer[0, :-1] = self.full_features_buffer[0, 1:]
-        self.full_features_buffer[0, -1] = outputs['hidden_state'][0, self.temporal_idxs]
+        self.full_features_buffer[0, -1] = outputs['hidden_state'][0, :]
+        # Use temporal_idxs only when copying to the numpy_inputs
         self.numpy_inputs['features_buffer'][0, :] = self.full_features_buffer[0, self.temporal_idxs]
+
+        # Also update prev_desired_curv if it's in the outputs and used
+        if "desired_curvature" in outputs and "prev_desired_curv" in self.numpy_inputs:
+          self.full_prev_desired_curv[0, :-1] = self.full_prev_desired_curv[0, 1:]
+          self.full_prev_desired_curv[0, -1, 0] = outputs['desired_curvature'][0]
+          self.numpy_inputs['prev_desired_curv'][0, :] = self.full_prev_desired_curv[0, self.temporal_idxs]
       case (False, False):
         feature_len = outputs['hidden_state'].shape[1]
         self.numpy_inputs['features_buffer'][0, :-1] = self.numpy_inputs['features_buffer'][0, 1:]
