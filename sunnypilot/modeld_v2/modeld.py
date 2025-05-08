@@ -96,7 +96,7 @@ class ModelState:
       self.full_desire[0, -1] = new_desire
       self.numpy_inputs['desire'][:] = self.full_desire.reshape((1, SplitModelConstants.INPUT_HISTORY_BUFFER_LEN, SplitModelConstants.TEMPORAL_SKIP, -1)).max(axis=2)
     elif self.model_runner.is_20hz:
-      # 20Hz model case (non-3D)
+      # 20Hz model case (non-split)
       self.full_desire[:-1] = self.full_desire[1:]
       self.full_desire[-1] = new_desire
       self.numpy_inputs['desire'][:] = self.full_desire.reshape(self.desire_reshape_dims).max(axis=2)
@@ -130,7 +130,7 @@ class ModelState:
 
       # Update inputs for second stage with outputs from first stage
       self.full_features_buffer[0, :-1] = self.full_features_buffer[0, 1:]
-      self.full_features_buffer[0, -1] = stage1_outputs['hidden_state'][0, self.temporal_idxs]
+      self.full_features_buffer[0, -1] = stage1_outputs['hidden_state'][0, :]
       self.numpy_inputs['features_buffer'][0, :] = self.full_features_buffer[0, self.temporal_idxs]
 
       # Stage 2: Prepare inputs for the second model with updated features
@@ -145,7 +145,7 @@ class ModelState:
 
       # Update feature buffer based on model type
       if self.model_runner.is_20hz:
-        # 20Hz model case (non-3D)
+        # 20Hz model case (non-split)
         self.full_features_buffer[:-1] = self.full_features_buffer[1:]
         self.full_features_buffer[-1] = outputs['hidden_state'][0, :]
         self.numpy_inputs['features_buffer'][:] = self.full_features_buffer[self.temporal_idxs]
