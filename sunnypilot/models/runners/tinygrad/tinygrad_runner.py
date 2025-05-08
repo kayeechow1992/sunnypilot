@@ -1,4 +1,5 @@
 import pickle
+from typing import cast
 
 import numpy as np
 from openpilot.sunnypilot.modeld_v2.runners.tinygrad_helpers import qcom_tensor_from_opencl_address
@@ -134,7 +135,7 @@ class TinygradSplitRunner(ModelRunner):
     # This ensures policy outputs (like recurrent state) are preserved
     combined_output = vision_output.copy()
     combined_output.update(policy_output)
-    return combined_output
+    return cast(NumpyDict, combined_output)
 
   @property
   def input_shapes(self) -> ShapeDict:
@@ -159,7 +160,7 @@ class TinygradSplitRunner(ModelRunner):
     # Combine the shapes, with policy shapes taking precedence if there are duplicate keys
     combined_shapes = vision_shapes.copy()
     combined_shapes.update(policy_shapes)
-    return combined_shapes
+    return cast(ShapeDict, combined_shapes)
 
   def prepare_inputs(self, imgs_cl: CLMemDict, numpy_inputs: NumpyDict, frames: FrameDict) -> dict:
     """

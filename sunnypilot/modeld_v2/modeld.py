@@ -62,7 +62,8 @@ class ModelState:
         self.full_features_buffer = np.zeros((1, SplitModelConstants.FULL_HISTORY_BUFFER_LEN,  SplitModelConstants.FEATURE_LEN), dtype=np.float32)
         self.full_desire = np.zeros((1, SplitModelConstants.FULL_HISTORY_BUFFER_LEN, SplitModelConstants.DESIRE_LEN), dtype=np.float32)
         self.full_prev_desired_curv = np.zeros((1, SplitModelConstants.FULL_HISTORY_BUFFER_LEN, SplitModelConstants.PREV_DESIRED_CURV_LEN), dtype=np.float32)
-        self.temporal_idxs = slice(-1-(SplitModelConstants.TEMPORAL_SKIP*(SplitModelConstants.INPUT_HISTORY_BUFFER_LEN-1)), None, SplitModelConstants.TEMPORAL_SKIP)
+        self.temporal_idxs = slice(-1-(SplitModelConstants.TEMPORAL_SKIP*(SplitModelConstants.INPUT_HISTORY_BUFFER_LEN-1)),
+                                   None, SplitModelConstants.TEMPORAL_SKIP)
 
     # img buffers are managed in openCL transform code
     self.numpy_inputs = {}
@@ -95,7 +96,8 @@ class ModelState:
       case (True, True):
         self.full_desire[0,:-1] = self.full_desire[0,1:]
         self.full_desire[0,-1] = new_desire
-        self.numpy_inputs['desire'][:] = self.full_desire.reshape((1,SplitModelConstants.INPUT_HISTORY_BUFFER_LEN,SplitModelConstants.TEMPORAL_SKIP,-1)).max(axis=2)
+        self.numpy_inputs['desire'][:] = self.full_desire.reshape((1,SplitModelConstants.INPUT_HISTORY_BUFFER_LEN,
+                                                                   SplitModelConstants.TEMPORAL_SKIP,-1)).max(axis=2)
       case (False, False):
         length = inputs['desire'].shape[0]
         self.numpy_inputs['desire'][0, :-1] = self.numpy_inputs['desire'][0, 1:]
