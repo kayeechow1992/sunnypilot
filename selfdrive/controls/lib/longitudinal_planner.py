@@ -177,6 +177,10 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
     else:
       output_a_target = min(output_a_target_mpc, output_a_target_e2e)
       self.output_should_stop = output_should_stop_e2e or output_should_stop_mpc
+      # To support SNPE/thneed models
+    output_a_target, self.output_should_stop = LongitudinalPlannerSP.override_accel_for_snpe_models(output_a_target, self.output_should_stop,
+                                                                                                    self.v_desired_trajectory, self.a_desired_trajectory,
+                                                                                                    CONTROL_N_T_IDX, action_t, self.CP.vEgoStopping)
 
     for idx in range(2):
       accel_clip[idx] = np.clip(accel_clip[idx], self.prev_accel_clip[idx] - 0.05, self.prev_accel_clip[idx] + 0.05)
