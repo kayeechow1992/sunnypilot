@@ -1,5 +1,4 @@
 import pickle
-from typing import cast
 
 import numpy as np
 from openpilot.sunnypilot.modeld_v2.runners.tinygrad_helpers import qcom_tensor_from_opencl_address
@@ -7,7 +6,6 @@ from openpilot.sunnypilot.models.runners.constants import CLMemDict, FrameDict, 
 from openpilot.sunnypilot.models.runners.model_runner import ModelRunner
 from openpilot.sunnypilot.models.runners.tinygrad.model_types import PolicyTinygrad, VisionTinygrad, SupercomboTinygrad
 from openpilot.system.hardware import TICI
-from openpilot.common.swaglog import cloudlog
 
 from tinygrad.tensor import Tensor
 
@@ -92,7 +90,7 @@ class TinygradSplitRunner(ModelRunner):
   """
   A ModelRunner that coordinates separate TinygradVisionRunner and TinygradPolicyRunner instances.
 
-  Manages sequential execution of policy then vision models, using policy outputs as vision inputs.
+  Manages the execution of split vision and policy models, combining their inputs and outputs.
   """
   def __init__(self):
     super().__init__()
@@ -101,90 +99,21 @@ class TinygradSplitRunner(ModelRunner):
     self.policy_runner = TinygradRunner(ModelType.policy)
 
   def _run_model(self) -> NumpyDict:
-    """
-    Runs models in sequence: policy -> vision, with policy outputs feeding into vision inputs.
-
-    First runs policy model, then transfers applicable outputs to vision model inputs,
-    then runs vision model, and finally combines all results.
-    """
-    # Run the policy model first
+    """Runs both vision and policy models and merges their parsed outputs."""
     policy_output = self.policy_runner.run_model()
-
-    # Pass policy outputs to vision inputs if they match expected input names
-    for key, output_array in policy_output.items():
-      if key in self.vision_runner.input_shapes and key in self.vision_runner.input_to_device and key in self.vision_runner.input_to_dtype:
-        expected_shape = self.vision_runner.input_shapes[key]
-
-        # Check for shape compatibility
-        if output_array.shape != expected_shape:
-          cloudlog.warning(f"Shape mismatch for policy->vision key '{key}': policy output {output_array.shape}, vision expects {expected_shape}")
-
-        # Convert the numpy array to a tensor with the expected device and dtype
-        device = self.vision_runner.input_to_device[key]
-        dtype = self.vision_runner.input_to_dtype[key]
-        try:
-          tensor = Tensor(output_array, device=device, dtype=dtype).realize()
-          self.vision_runner.inputs[key] = tensor
-        except Exception as e:
-          cloudlog.exception(f"Error transferring policy output '{key}' to vision: {e}")
-
-    # Now run the vision model
     vision_output = self.vision_runner.run_model()
-
-    # Combine results - policy outputs take precedence for any overlapping keys
-    # This ensures policy outputs (like recurrent state) are preserved
-    combined_output = vision_output.copy()
-    combined_output.update(policy_output)
-    return cast(NumpyDict, combined_output)
+    return {**policy_output, **vision_output} # Combine results
 
   @property
   def input_shapes(self) -> ShapeDict:
-    """
-    Returns combined external input shapes from both models.
-
-    Excludes vision inputs that come from policy outputs since those are internal to the split model.
-    """
-    vision_shapes = self.vision_runner.input_shapes.copy()
-    policy_shapes = self.policy_runner.input_shapes.copy()
-
-    # If policy model provides outputs that match vision inputs, those are internal connections
-    # and not part of the external input interface of the split model
-    if self.policy_runner._model_data and self.policy_runner._model_data.output_slices:
-      policy_output_keys = self.policy_runner._model_data.output_slices.keys()
-
-      # Remove from vision_shapes any keys that match policy outputs
-      for key in policy_output_keys:
-        if key in vision_shapes:
-          del vision_shapes[key]
-
-    # Combine the shapes, with policy shapes taking precedence if there are duplicate keys
-    combined_shapes = vision_shapes.copy()
-    combined_shapes.update(policy_shapes)
-    return cast(ShapeDict, combined_shapes)
+    """Returns the combined input shapes from both vision and policy models."""
+    return {**self.policy_runner.input_shapes, **self.vision_runner.input_shapes}
 
   def prepare_inputs(self, imgs_cl: CLMemDict, numpy_inputs: NumpyDict, frames: FrameDict) -> dict:
-    """
-    Prepares only the initial external inputs for both models.
-
-    The policy -> vision internal data transfer happens during model execution in _run_model.
-    """
-    # Prepare policy's numpy inputs
+    """Prepares inputs for both vision and policy models."""
+    # Policy inputs only depend on numpy_inputs
     self.policy_runner.prepare_policy_inputs(numpy_inputs)
-
-    # Prepare vision's image inputs
+    # Vision inputs depend on imgs_cl and frames
     self.vision_runner.prepare_vision_inputs(imgs_cl, frames)
-
-    # Prepare any additional numpy inputs for vision that aren't provided by policy
-    if self.policy_runner._model_data and self.policy_runner._model_data.output_slices:
-      policy_output_keys = self.policy_runner._model_data.output_slices.keys()
-
-      # Only add numpy inputs to vision that aren't going to be provided by policy outputs
-      for key, value in numpy_inputs.items():
-        if key not in policy_output_keys and key in self.vision_runner.input_shapes:
-          if key in self.vision_runner.input_to_device and key in self.vision_runner.input_to_dtype:
-            device = self.vision_runner.input_to_device[key]
-            dtype = self.vision_runner.input_to_dtype[key]
-            self.vision_runner.inputs[key] = Tensor(value, device=device, dtype=dtype).realize()
-
-    # Return combined inputs dictionary (even though they're stored in separate runners)
+    # Return combined inputs (though they are stored within respective runners)
     return {**self.policy_runner.inputs, **self.vision_runner.inputs}
