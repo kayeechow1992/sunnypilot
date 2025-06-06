@@ -1,9 +1,10 @@
-from openpilot.system.ui.lib.list_view import ListView, text_item, button_item
 from openpilot.common.params import Params
-from openpilot.system.hardware import TICI
-from openpilot.system.ui.widgets.confirm_dialog import confirm_dialog, alert_dialog
-from openpilot.system.ui.lib.application import gui_app
 from openpilot.selfdrive.ui.ui_state import ui_state
+from openpilot.system.hardware import TICI
+from openpilot.system.ui.lib.application import gui_app
+from openpilot.system.ui.lib.list_view import ListView, text_item, button_item
+from openpilot.system.ui.widgets.confirm_dialog import confirm_dialog, alert_dialog
+
 
 # Description constants
 DESCRIPTIONS = {
@@ -19,9 +20,9 @@ DESCRIPTIONS = {
 
 class DeviceLayout:
   def __init__(self):
-    self.params = Params()
-    dongle_id = self.params.get("DongleId", encoding="utf-8") or "N/A"
-    serial = self.params.get("HardwareSerial") or "N/A"
+    self._params = Params()
+    dongle_id = self._params.get("DongleId", encoding="utf-8") or "N/A"
+    serial = self._params.get("HardwareSerial") or "N/A"
 
     items = [
       text_item("Dongle ID", dongle_id),
