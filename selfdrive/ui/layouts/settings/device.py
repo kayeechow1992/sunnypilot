@@ -53,8 +53,8 @@ class DeviceLayout:
       callback=self._reset_calibration,
     )
 
-  def _reset_calibration(self):
-    if ui_state.engaged:
+  def _reset_calibration(self, result: int):
+    if ui_state.engaged or result != 1:
       return
 
     self._params.remove("CalibrationParams")
