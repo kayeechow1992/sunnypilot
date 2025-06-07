@@ -1,5 +1,5 @@
 from openpilot.system.ui.lib.application import Widget
-from openpilot.system.ui.lib.list_view import ListView, toggle_item
+from system.ui.sunnypilot.lib.list_view import ListViewSP as ListView, toggle_item
 from openpilot.common.params import Params
 from openpilot.selfdrive.ui.ui_state import ui_state
 
