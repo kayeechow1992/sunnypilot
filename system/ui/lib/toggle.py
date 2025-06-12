@@ -1,5 +1,5 @@
 import pyray as rl
-from openpilot.system.ui.lib.application import Widget
+from openpilot.system.ui.sunnypilot.lib.toggle import ToggleSP
 
 ON_COLOR = rl.Color(51, 171, 76, 255)
 OFF_COLOR = rl.Color(0x39, 0x39, 0x39, 255)
@@ -12,13 +12,14 @@ BG_HEIGHT = 60
 ANIMATION_SPEED = 8.0
 
 
-class Toggle(Widget):
+class Toggle(ToggleSP):
   def __init__(self, initial_state=False):
     self._state = initial_state
     self._enabled = True
     self._rect = rl.Rectangle(0, 0, WIDTH, HEIGHT)
     self._progress = 1.0 if initial_state else 0.0
     self._target = self._progress
+    ToggleSP.__init__(self, initial_state)
 
   def handle_input(self):
     if not self._enabled:
@@ -53,6 +54,9 @@ class Toggle(Widget):
   def render(self, rect: rl.Rectangle):
     self._rect.x, self._rect.y = rect.x, rect.y
     self.update()
+
+    if ToggleSP.render(self, self._rect):
+        return self.handle_input()
 
     if self._enabled:
       bg_color = self._blend_color(OFF_COLOR, ON_COLOR, self._progress)
