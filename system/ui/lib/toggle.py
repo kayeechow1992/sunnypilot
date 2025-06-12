@@ -25,7 +25,7 @@ class Toggle(ToggleSP):
     if not self._enabled:
       return 0
 
-    if rl.is_mouse_button_pressed(rl.MOUSE_LEFT_BUTTON):
+    if rl.is_mouse_button_released(rl.MouseButton.MOUSE_BUTTON_LEFT):
       if rl.check_collision_point_rec(rl.get_mouse_position(), self._rect):
         self._state = not self._state
         self._target = 1.0 if self._state else 0.0
@@ -51,7 +51,7 @@ class Toggle(ToggleSP):
       self._progress += delta if self._progress < self._target else -delta
       self._progress = max(0.0, min(1.0, self._progress))
 
-  def render(self, rect: rl.Rectangle):
+  def _render(self, rect: rl.Rectangle):
     self._rect.x, self._rect.y = rect.x, rect.y
     self.update()
 

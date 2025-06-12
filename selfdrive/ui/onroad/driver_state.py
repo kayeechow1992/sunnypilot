@@ -2,7 +2,8 @@ import numpy as np
 import pyray as rl
 from dataclasses import dataclass
 from openpilot.selfdrive.ui.ui_state import ui_state, UI_BORDER_SIZE
-from openpilot.system.ui.lib.application import gui_app, Widget
+from openpilot.system.ui.lib.application import gui_app
+from openpilot.system.ui.lib.widget import Widget
 
 # Default 3D coordinates for face keypoints as a NumPy array
 DEFAULT_FACE_KPTS_3D = np.array([
@@ -43,6 +44,7 @@ class ArcData:
 
 class DriverStateRenderer(Widget):
   def __init__(self):
+    super().__init__()
     # Initial state with NumPy arrays
     self.face_kpts_draw = DEFAULT_FACE_KPTS_3D.copy()
     self.is_active = False
@@ -74,7 +76,7 @@ class DriverStateRenderer(Widget):
     self.engaged_color = rl.Color(26, 242, 66, 255)
     self.disengaged_color = rl.Color(139, 139, 139, 255)
 
-  def render(self, rect):
+  def _render(self, rect):
     if not self._is_visible(ui_state.sm):
       return
 
@@ -109,8 +111,7 @@ class DriverStateRenderer(Widget):
   def _is_visible(self, sm):
     """Check if the visualization should be rendered."""
     return (sm.recv_frame['driverStateV2'] > ui_state.started_frame and
-            sm.seen['driverMonitoringState'] and
-            sm['selfdriveState'].alertSize == 0)
+            sm.seen['driverMonitoringState'])
 
   def _update_state(self, sm, rect):
     """Update the driver monitoring state based on model data"""

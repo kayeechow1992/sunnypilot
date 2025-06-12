@@ -2,8 +2,8 @@ import pyray as rl
 from openpilot.system.ui.lib.application import gui_app, FontWeight
 from openpilot.system.ui.lib.button import gui_button, ButtonStyle
 from openpilot.system.ui.lib.label import gui_text_box
+from openpilot.system.ui.lib.widget import DialogResult
 
-# Constants for dialog dimensions and styling
 DIALOG_WIDTH = 1520
 DIALOG_HEIGHT = 600
 BUTTON_HEIGHT = 160
@@ -12,7 +12,7 @@ TEXT_AREA_HEIGHT_REDUCTION = 200
 BACKGROUND_COLOR = rl.Color(27, 27, 27, 255)
 
 
-def confirm_dialog(message: str, confirm_text: str, cancel_text: str = "Cancel") -> int:
+def confirm_dialog(message: str, confirm_text: str, cancel_text: str = "Cancel") -> DialogResult:
   dialog_x = (gui_app.width - DIALOG_WIDTH) / 2
   dialog_y = (gui_app.height - DIALOG_HEIGHT) / 2
   dialog_rect = rl.Rectangle(dialog_x, dialog_y, DIALOG_WIDTH, DIALOG_HEIGHT)
@@ -41,27 +41,28 @@ def confirm_dialog(message: str, confirm_text: str, cancel_text: str = "Cancel")
   )
 
   # Initialize result; -1 means no action taken yet
-  result = -1
+  result = DialogResult.NO_ACTION
 
   # Check for keyboard input for accessibility
   if rl.is_key_pressed(rl.KeyboardKey.KEY_ENTER):
-    result = 1  # Confirm
+    result = DialogResult.CONFIRM
   elif rl.is_key_pressed(rl.KeyboardKey.KEY_ESCAPE):
-    result = 0  # Cancel
+    result = DialogResult.CANCEL
 
   # Check for button clicks
   if cancel_text:
     if gui_button(yes_button, confirm_text, button_style=ButtonStyle.PRIMARY):
-      result = 1  # Confirm
+      result = DialogResult.CONFIRM
     if gui_button(no_button, cancel_text):
-      result = 0  # Cancel
+      result = DialogResult.CANCEL
   else:
     centered_button_x = dialog_rect.x + (dialog_rect.width - button_width) / 2
     centered_yes_button = rl.Rectangle(centered_button_x, button_y, button_width, BUTTON_HEIGHT)
     if gui_button(centered_yes_button, confirm_text, button_style=ButtonStyle.PRIMARY):
-      result = 1  # Confirm
+      result = DialogResult.CONFIRM
 
   return result
 
-def alert_dialog(message: str, button_text: str = "OK") -> int:
+
+def alert_dialog(message: str, button_text: str = "OK") -> DialogResult:
   return confirm_dialog(message, button_text, cancel_text="")
