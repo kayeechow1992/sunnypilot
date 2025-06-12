@@ -1,5 +1,6 @@
 import pyray as rl
-from openpilot.system.ui.lib.application import Widget
+from openpilot.system.ui.lib.widget import Widget
+import openpilot.system.ui.lib.toggle as ToggleOP
 
 ON_COLOR = rl.Color(28, 101, 186, 255)
 OFF_COLOR = rl.Color(0x39, 0x39, 0x39, 255)
@@ -9,30 +10,23 @@ DISABLED_OFF_COLOR = rl.Color(0x39, 0x39, 0x39, 255)
 DISABLED_KNOB_COLOR = rl.Color(0x88, 0x88, 0x88, 255)
 WIDTH, HEIGHT = 130, 80
 BG_HEIGHT = 60
-ANIMATION_SPEED = 8.0
-
 
 class ToggleSP(Widget):
-  def __init__(self, initial_state=False):
-    self._state = initial_state
-    self._enabled = True
-    self._rect = rl.Rectangle(0, 0, WIDTH, HEIGHT)
-    self._progress = 1.0 if initial_state else 0.0
-    self._target = self._progress
+  def __init__(self):
+    super().__init__()
 
-
-  def render(self, rect: rl.Rectangle):
+  def _render(self, rect: rl.Rectangle):
 
     if self._enabled:
-      bg_color = self._blend_color(OFF_COLOR, ON_COLOR, self._progress)
+      bg_color = ToggleOP.Toggle._blend_color(self, OFF_COLOR, ON_COLOR, self._progress)
       knob_color = KNOB_COLOR
     else:
-      bg_color = self._blend_color(DISABLED_OFF_COLOR, DISABLED_ON_COLOR, self._progress)
+      bg_color = ToggleOP.Toggle._blend_color(self, DISABLED_OFF_COLOR, DISABLED_ON_COLOR, self._progress)
       knob_color = DISABLED_KNOB_COLOR
 
     # Draw background
     bg_rect = rl.Rectangle(self._rect.x + 5, self._rect.y + 10, WIDTH - 10, BG_HEIGHT)
-    
+
     # Draw outline first
     outline_color = ON_COLOR
     if not self._enabled:
@@ -61,10 +55,8 @@ class ToggleSP(Widget):
     rl.draw_circle(int(knob_x), int(knob_y), knob_radius, knob_color)
 
     symbol_size = knob_radius / 2
-    symbol_color = rl.GRAY
-    
+
     if self._state and (self._enabled or self._progress > 0.5):
-        symbol_color = ON_COLOR
         # Draw checkmark when toggle is ON
         start_x = knob_x - symbol_size * 0.8
         start_y = knob_y
@@ -77,13 +69,13 @@ class ToggleSP(Widget):
             rl.Vector2(int(start_x), int(start_y)),
             rl.Vector2(int(mid_x), int(mid_y)),
             3,
-            symbol_color
+            ON_COLOR
         )
         rl.draw_line_ex(
             rl.Vector2(int(mid_x), int(mid_y)),
             rl.Vector2(int(end_x), int(end_y)),
             3,
-            symbol_color
+            ON_COLOR
         )
     else:
         # Draw X when toggle is OFF
@@ -94,16 +86,12 @@ class ToggleSP(Widget):
             rl.Vector2(int(knob_x - x_offset), int(knob_y - x_offset)),
             rl.Vector2(int(knob_x + x_offset), int(knob_y + x_offset)),
             3,
-            symbol_color
+            OFF_COLOR
         )
         rl.draw_line_ex(
             rl.Vector2(int(knob_x + x_offset), int(knob_y - x_offset)),
             rl.Vector2(int(knob_x - x_offset), int(knob_y + x_offset)),
             3,
-            symbol_color
+            OFF_COLOR
         )
-
     return True
-
-  def _blend_color(self, c1, c2, t):
-    return rl.Color(int(c1.r + (c2.r - c1.r) * t), int(c1.g + (c2.g - c1.g) * t), int(c1.b + (c2.b - c1.b) * t), 255)

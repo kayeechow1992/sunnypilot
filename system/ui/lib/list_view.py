@@ -8,6 +8,7 @@ from openpilot.system.ui.lib.wrap_text import wrap_text
 from openpilot.system.ui.lib.button import gui_button, ButtonStyle
 from openpilot.system.ui.lib.toggle import Toggle, WIDTH as TOGGLE_WIDTH, HEIGHT as TOGGLE_HEIGHT
 from openpilot.system.ui.lib.widget import Widget
+from openpilot.system.ui.sunnypilot.lib.list_view import ListItemSP
 
 LINE_PADDING = 40
 ITEM_BASE_HEIGHT = 170
@@ -34,7 +35,7 @@ def _get_value(value, default=""):
   return value if value is not None else default
 
 
-class ListItem(Widget, ABC):
+class ListItem(ListItemSP):
   def __init__(self, title, description: StrSrc=None, enabled: BoolSrc=True, visible: BoolSrc=True, icon=None):
     super().__init__()
     self.title = title
@@ -109,6 +110,12 @@ class ListItem(Widget, ABC):
     return ITEM_BASE_HEIGHT + self._description_height - (ITEM_BASE_HEIGHT - ITEM_DESC_V_OFFSET) + ITEM_PADDING
 
   def _render(self, rect: rl.Rectangle):
+
+    action_rect = ListItemSP._render(self, rect)
+    if action_rect is not None:
+      self.render_action(action_rect)
+      return
+
     # Handle click on title/description area for toggling description
     if self.description and rl.is_mouse_button_released(rl.MouseButton.MOUSE_BUTTON_LEFT):
       mouse_pos = rl.get_mouse_position()

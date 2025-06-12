@@ -1,81 +1,59 @@
 import pyray as rl
-from dataclasses import dataclass
-from system.ui.lib.list_view import *
 
-@dataclass
-class ListItemSP(ListItem):
+import openpilot.system.ui.lib.list_view as ListItem
+from openpilot.system.ui.lib.widget import Widget
+from openpilot.system.ui.lib.text_measure import measure_text_cached
 
-  def is_toggle_action(self) -> bool:
-    return isinstance(self.action_item, ToggleAction)
-  
-  def get_right_item_rect(self, item_rect: rl.Rectangle) -> rl.Rectangle:
-    if not self.action_item:
-      return rl.Rectangle(0, 0, 0, 0)
-  
-    action_width = self.action_item.get_width()
-    
-    if self.is_toggle_action():
-      # Position toggle on the left
-      action_x = item_rect.x + ITEM_PADDING
-      action_y = item_rect.y
-    else:
-      # Position other actions on the right
-      action_x = item_rect.x + item_rect.width - action_width
-      action_y = item_rect.y
-      
-    return rl.Rectangle(action_x, action_y, action_width, ITEM_BASE_HEIGHT)
+LINE_PADDING = 40
+ITEM_BASE_HEIGHT = 170
+ITEM_PADDING = 20
+ITEM_TEXT_FONT_SIZE = 50
+ITEM_TEXT_COLOR = rl.WHITE
+ITEM_DESC_TEXT_COLOR = rl.Color(128, 128, 128, 255)
+ITEM_DESC_FONT_SIZE = 40
+ITEM_DESC_V_OFFSET = 140
+ICON_SIZE = 80
+BUTTON_WIDTH = 250
+BUTTON_HEIGHT = 100
+BUTTON_FONT_SIZE = 35
 
+class ListItemSP(Widget):
 
-class ListViewSP(ListView):
-  def __init__(self, items: list[ListItemSP]):
-    super().__init__(items)
-    self._items: list[ListItemSP] = items
+  def __init__(self):
+    super().__init__()
 
-  def _render_item(self, item: ListItemSP, y: int):
-    content_x = item.rect.x + ITEM_PADDING
-    text_x = content_x
+  def _render(self, rect: rl.Rectangle):
+    # Handle click on title/description area for toggling description
+    if self.description and rl.is_mouse_button_released(rl.MouseButton.MOUSE_BUTTON_LEFT):
+      mouse_pos = rl.get_mouse_position()
 
-    # Draw toggle on left if it's a toggle item
-    if item.action_item and item.is_toggle_action():
-      # Get toggle rectangle positioned on the left
-      toggle_rect = item.get_right_item_rect(item.rect)
-      toggle_rect.y = y
+      text_area_width = rect.width - self.get_action_width() - ITEM_PADDING
+      text_area_x = rect.x
+      if isinstance(self, ListItem.ToggleItem):
+        text_area_x = text_area_x + self.get_action_width() + ITEM_PADDING
+      text_area = rl.Rectangle(text_area_x, rect.y, text_area_width, rect.height)
 
-      # Draw the toggle and handle its activation
-      if item.action_item.draw(toggle_rect) and item.action_item.enabled:
-        if item.callback:
-          item.callback()
+      if rl.check_collision_point_rec(mouse_pos, text_area):
+        self.show_desc = not self.show_desc
 
-      # Adjust text position to be after the toggle
-      text_x = toggle_rect.x + toggle_rect.width + ITEM_PADDING
-
-
-    # Draw main text
-    text_size = measure_text_cached(self._font, item.title, ITEM_TEXT_FONT_SIZE)
-    item_y = y + (ITEM_BASE_HEIGHT - text_size.y) // 2
-    rl.draw_text_ex(self._font, item.title, rl.Vector2(text_x, item_y), ITEM_TEXT_FONT_SIZE, 0, ITEM_TEXT_COLOR)
+    # Render title and description
+    x = rect.x + ITEM_PADDING
 
     # Draw description if visible
-    current_description = item.get_description()
-    if item.description_visible and current_description and item._wrapped_description:
-      rl.draw_text_ex(
-        self._font,
-        item._wrapped_description,
-        (text_x, y + ITEM_DESC_V_OFFSET),
-        ITEM_DESC_FONT_SIZE,
-        0,
-        ITEM_DESC_TEXT_COLOR,
-      )
+    if self.show_desc and self._wrapped_description:
+      rl.draw_text_ex(self._font, self._wrapped_description, (x, rect.y + ITEM_DESC_V_OFFSET),
+                      ITEM_DESC_FONT_SIZE, 0, ITEM_DESC_TEXT_COLOR)
 
-    # Draw non-toggle action items (buttons, text) on the right
-    if item.action_item and not item.is_toggle_action():
-      action_rect = item.get_right_item_rect(item.rect)
-      action_rect.y = y
-      if item.action_item.draw(action_rect) and item.action_item.enabled:
-        if item.callback:
-          item.callback()
+    # Render action if needed
+    action_width = self.get_action_width()
+    if isinstance(self, ListItem.ToggleItem):
+      action_rect = rl.Rectangle(rect.x + ITEM_PADDING, rect.y, action_width, ITEM_BASE_HEIGHT)
+      x += action_width + ITEM_PADDING
+    else:
+      action_rect = rl.Rectangle(rect.x + rect.width - action_width, rect.y, action_width, ITEM_BASE_HEIGHT)
 
-def toggle_item(title: str, description: str | Callable[[], str] | None = None, initial_state: bool = False,
-                callback: Callable | None = None, icon: str = "", enabled: bool | Callable[[], bool] = True) -> ListItemSP:
-  action = ToggleAction(initial_state=initial_state, enabled=enabled)
-  return ListItemSP(title=title, description=description, action_item=action, icon=icon, callback=callback)
+    text_size = measure_text_cached(self._font, self.title, ITEM_TEXT_FONT_SIZE)
+    title_y = rect.y + (ITEM_BASE_HEIGHT - text_size.y) // 2
+    rl.draw_text_ex(self._font, self.title, (x, title_y), ITEM_TEXT_FONT_SIZE, 0, ITEM_TEXT_COLOR)
+
+    return action_rect

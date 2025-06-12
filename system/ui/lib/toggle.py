@@ -14,12 +14,12 @@ ANIMATION_SPEED = 8.0
 
 class Toggle(ToggleSP):
   def __init__(self, initial_state=False):
+    ToggleSP.__init__(self)
     self._state = initial_state
     self._enabled = True
     self._rect = rl.Rectangle(0, 0, WIDTH, HEIGHT)
     self._progress = 1.0 if initial_state else 0.0
     self._target = self._progress
-    ToggleSP.__init__(self, initial_state)
 
   def handle_input(self):
     if not self._enabled:
@@ -55,7 +55,8 @@ class Toggle(ToggleSP):
     self._rect.x, self._rect.y = rect.x, rect.y
     self.update()
 
-    if ToggleSP.render(self, self._rect):
+    # TODO: Is this the best way?
+    if ToggleSP._render(self, self._rect):
         return self.handle_input()
 
     if self._enabled:
