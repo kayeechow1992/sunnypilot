@@ -12,14 +12,14 @@ from openpilot.system.ui.lib.scroll_panel import GuiScrollPanel
 from openpilot.system.ui.lib.text_measure import measure_text_cached
 from openpilot.selfdrive.ui.layouts.network import NetworkLayout
 from openpilot.system.ui.lib.widget import Widget
-from selfdrive.ui.sunnypilot.layouts.settings.models import ModelsLayout
-from selfdrive.ui.sunnypilot.layouts.settings.sunnylink import SunnylinkLayout
-from selfdrive.ui.sunnypilot.layouts.settings.osm import OSMLayout
-from selfdrive.ui.sunnypilot.layouts.settings.trips import TripsLayout
-from selfdrive.ui.sunnypilot.layouts.settings.vehicle import VehicleLayout
-from selfdrive.ui.sunnypilot.layouts.settings.steering import SteeringLayout
-from selfdrive.ui.sunnypilot.layouts.settings.cruise import CruiseLayout
-from selfdrive.ui.sunnypilot.layouts.settings.visuals import VisualsLayout
+from openpilot.selfdrive.ui.sunnypilot.layouts.settings.models import ModelsLayout
+from openpilot.selfdrive.ui.sunnypilot.layouts.settings.sunnylink import SunnylinkLayout
+from openpilot.selfdrive.ui.sunnypilot.layouts.settings.osm import OSMLayout
+from openpilot.selfdrive.ui.sunnypilot.layouts.settings.trips import TripsLayout
+from openpilot.selfdrive.ui.sunnypilot.layouts.settings.vehicle import VehicleLayout
+from openpilot.selfdrive.ui.sunnypilot.layouts.settings.steering import SteeringLayout
+from openpilot.selfdrive.ui.sunnypilot.layouts.settings.cruise import CruiseLayout
+from openpilot.selfdrive.ui.sunnypilot.layouts.settings.visuals import VisualsLayout
 
 # Import individual panels
 
