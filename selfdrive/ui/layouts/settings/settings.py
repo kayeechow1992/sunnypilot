@@ -8,9 +8,18 @@ from openpilot.selfdrive.ui.layouts.settings.firehose import FirehoseLayout
 from openpilot.selfdrive.ui.layouts.settings.software import SoftwareLayout
 from openpilot.selfdrive.ui.layouts.settings.toggles import TogglesLayout
 from openpilot.system.ui.lib.application import gui_app, FontWeight
+from openpilot.system.ui.lib.scroll_panel import GuiScrollPanel
 from openpilot.system.ui.lib.text_measure import measure_text_cached
 from openpilot.selfdrive.ui.layouts.network import NetworkLayout
 from openpilot.system.ui.lib.widget import Widget
+from selfdrive.ui.sunnypilot.layouts.settings.models import ModelsLayout
+from selfdrive.ui.sunnypilot.layouts.settings.sunnylink import SunnylinkLayout
+from selfdrive.ui.sunnypilot.layouts.settings.osm import OSMLayout
+from selfdrive.ui.sunnypilot.layouts.settings.trips import TripsLayout
+from selfdrive.ui.sunnypilot.layouts.settings.vehicle import VehicleLayout
+from selfdrive.ui.sunnypilot.layouts.settings.steering import SteeringLayout
+from selfdrive.ui.sunnypilot.layouts.settings.cruise import CruiseLayout
+from selfdrive.ui.sunnypilot.layouts.settings.visuals import VisualsLayout
 
 # Import individual panels
 
@@ -36,6 +45,15 @@ class PanelType(IntEnum):
   SOFTWARE = 3
   FIREHOSE = 4
   DEVELOPER = 5
+  SUNNYLINK = 6
+  MODELS = 7
+  STEERING = 8
+  CRUISE = 9
+  VISUALS = 10
+  OSM = 11
+  TRIPS = 12
+  VEHICLE = 13
+
 
 
 @dataclass
@@ -54,11 +72,21 @@ class SettingsLayout(Widget):
     self._panels = {
       PanelType.DEVICE: PanelInfo("Device", DeviceLayout()),
       PanelType.NETWORK: PanelInfo("Network", NetworkLayout()),
+      PanelType.SUNNYLINK: PanelInfo("sunnylink", SunnylinkLayout()),
       PanelType.TOGGLES: PanelInfo("Toggles", TogglesLayout()),
       PanelType.SOFTWARE: PanelInfo("Software", SoftwareLayout()),
+      PanelType.MODELS: PanelInfo("Models", ModelsLayout()),
+      PanelType.STEERING: PanelInfo("Steering", SteeringLayout()),
+      PanelType.CRUISE: PanelInfo("Cruise", CruiseLayout()),
+      PanelType.VISUALS: PanelInfo("Visuals", VisualsLayout()),
+      PanelType.OSM: PanelInfo("OSM", OSMLayout()),
+      PanelType.TRIPS: PanelInfo("Trips", TripsLayout()),
+      PanelType.VEHICLE: PanelInfo("Vehicle", VehicleLayout()),
       PanelType.FIREHOSE: PanelInfo("Firehose", FirehoseLayout()),
       PanelType.DEVELOPER: PanelInfo("Developer", DeveloperLayout()),
     }
+
+    self.sidebar_scroll_panel = GuiScrollPanel()
 
     self._font_medium = gui_app.font(FontWeight.MEDIUM)
     self._font_bold = gui_app.font(FontWeight.SEMI_BOLD)
