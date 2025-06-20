@@ -1,4 +1,4 @@
-from openpilot.system.ui.lib.list_view import ListView, ButtonItem, ToggleItem
+from openpilot.system.ui.lib.list_view import ListView, button_item, toggle_item
 from openpilot.system.ui.lib.widget import Widget
 from openpilot.common.params import Params
 
@@ -8,8 +8,8 @@ class ModelsLayout(Widget):
     super().__init__()
     self._params = Params()
     items = [
-      ButtonItem("Current Model", "SELECT"),
-      ToggleItem("Live Learning Steer Delay"),
+      button_item("Current Model", "SELECT"),
+      toggle_item("Live Learning Steer Delay"),
     ]
 
     self._list_widget = ListView(items)
