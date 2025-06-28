@@ -21,6 +21,8 @@ if __name__ == "__main__":
   HARDWARE.set_power_save(False)
 
   procs = ['camerad', 'ui', 'calibrationd', 'plannerd', 'dmonitoringmodeld', 'dmonitoringd']
+  procs.remove('dmonitoringmodeld')
+  procs.remove('dmonitoringd')
   procs += ["modeld_snpe" if use_snpe_modeld else "modeld_tinygrad" if use_tinygrad_modeld else "modeld"]
   for p in procs:
     managed_processes[p].start()
